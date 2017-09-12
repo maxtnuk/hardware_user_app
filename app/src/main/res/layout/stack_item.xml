@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<GridLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical"
+    android:rowCount="2"
+    android:columnCount="1"
+    android:layout_height="match_parent"
+    android:layout_width="match_parent">
+    <TextView
+        android:id="@+id/stack_title"
+        android:paddingStart="15dp"
+        android:layout_rowWeight="1"
+        android:layout_columnWeight="1"
+        android:gravity="center|start"
+        android:text="asdf"
+        />
+    <com.akexorcist.roundcornerprogressbar.IconRoundCornerProgressBar
+        android:id="@+id/stack_bar"
+        android:layout_rowWeight="1"
+        android:layout_columnWeight="1"
+        />
+</GridLayout>

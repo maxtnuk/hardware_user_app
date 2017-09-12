@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="colorPrimary">#3F51B5</color>
+    <color name="colorPrimaryDark">#303F9F</color>
+    <color name="colorAccent">#FF4081</color>
+
+    <color name="default_color">#23d7dd</color>
+
+    <color name="health">#A01A1D</color>
+    <color name="attack">#A16A1A</color>
+    <color name="defense">#126F47</color>
+    <color name="speed">#008181</color>
+
+    <color name="game_tab">#099B76</color>
+
+    <color name="progress">#E7F4F4</color>
+    <color name="whitegray">#5E5E65</color>
+    <color name="loading_background">#148C55</color>
+</resources>
