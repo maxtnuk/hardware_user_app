@@ -146,7 +146,7 @@ class BluetoothService(activity: Activity,handler: Handler,user: User_con) {
                 }
 
                 override fun onDeviceConnected(name: String?, address: String?) {
-
+                    //Toast.makeText(mActivity,address,Toast.LENGTH_SHORT).show()
                 }
 
                 override fun onDeviceConnectionFailed() {
@@ -192,6 +192,9 @@ class BluetoothService(activity: Activity,handler: Handler,user: User_con) {
     fun before_connect(remote_device: BluetoothDevice) {
       remote_device?.let{
           device->
+          if(btspp==null){
+              initialize_blue()
+          }
           btspp?.let{
               it.setupService()
               it.startService(BluetoothState.DEVICE_ANDROID);
