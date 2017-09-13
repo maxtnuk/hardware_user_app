@@ -38,12 +38,9 @@ class shop_view_adp(context: Context?, itemId: Int, user: User_con) : FitGridAda
                             }
                              */
                             blue_service.btspp?.let{
-                                if(blue_service.cancle_check){
-                                    blue_service.connect_rasp()
-                                }
                                 blue_service.send_shop()
                             } ?: kotlin.run{
-                                blue_service.check_device()
+                                Toast.makeText(context,"블루투스가 연결이 원활하지 않습니다 ",Toast.LENGTH_SHORT).show()
                             }
                         }
                     }

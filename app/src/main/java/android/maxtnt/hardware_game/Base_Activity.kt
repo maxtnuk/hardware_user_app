@@ -90,15 +90,28 @@ open class Base_Activity : AppCompatActivity() {
                     }
                 }
             }
+            Request_cons.REQUEST_ENABLE_BT_DISCOVERY->{
+                when (resultCode){
+                    Activity.RESULT_OK ->{
+                        blue_service.start_discovery()
+                    }
+                    Activity.RESULT_CANCELED ->{
+
+                    }
+                    else ->{
+
+                    }
+                }
+            }
             else ->{
 
             }
         }
     }
 
-    override fun onPause() {
+    override fun onStop() {
         blue_service.close()
-        super.onPause()
+        super.onStop()
     }
 
 }

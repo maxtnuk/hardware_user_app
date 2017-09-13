@@ -44,6 +44,7 @@ import android.widget.TextView
 import app.akexorcist.bluetotohspp.library.BluetoothSPP
 import app.akexorcist.bluetotohspp.library.BluetoothState
 import org.json.JSONObject
+import java.io.IOException
 import kotlin.collections.HashSet
 import kotlin.collections.LinkedHashSet
 
@@ -52,27 +53,30 @@ class BluetoothService(activity: Activity,handler: Handler,user: User_con) {
     // Debugging
     private val TAG = "BluetoothService"
     private val bt = BluetoothSPP(activity);
+    var device_count=0
+    var registered=true;
     var cancle_check=false
     get
     companion object {
         private val myuuid= UUID.fromString("ec79da00-853f-11e4-b4a9-0800200c9a66")
     }
-
-    val btAdapter: BluetoothAdapter= BluetoothAdapter.getDefaultAdapter()
+    private val bluetooth_adp=BluetoothAdapter.getDefaultAdapter()
     //private val btdevice_list: BluetoothLeScanner =btAdapter.bluetoothLeScanner
     private val blue_devices: LinkedHashSet<BluetoothDevice> = LinkedHashSet<BluetoothDevice>()
     val blue_adp: recycle_blue= recycle_blue(blue_devices).apply {
         cbitem=object: recycle_blue.Item{
             override fun ClickName(holder: recycle_blue.ItemViewHolder,Postion: Int){
-                if(btAdapter.isDiscovering){
-                    btAdapter.cancelDiscovery()
+                bluetooth_adp.isDiscovering.let {
+                    if(it){
+                        bluetooth_adp?.cancelDiscovery()
+                    }
                 }
                 holder.apply{
                     self.setEnabled(false)
                     device_name.setTextColor(R.color.whitegray)
                 }
+                //before_connect(blue_devices.elementAt(Postion))
                 before_connect(blue_devices.elementAt(Postion))
-                Log.v("bluetooth_get",blue_devices.elementAt(Postion).address)
             }
         }
     }
@@ -89,6 +93,7 @@ class BluetoothService(activity: Activity,handler: Handler,user: User_con) {
             p1?.getAction()?.let{
                 when(it){
                     BluetoothAdapter.ACTION_DISCOVERY_STARTED ->{
+                        device_count=0
                         Toast.makeText(mActivity,"searching...",Toast.LENGTH_SHORT).show()
                         blue_devices.clear()
                         blue_adp.notifyDataSetChanged()
@@ -97,7 +102,7 @@ class BluetoothService(activity: Activity,handler: Handler,user: User_con) {
                         Toast.makeText(mActivity,"search finish",Toast.LENGTH_SHORT).show()
                     }
                     BluetoothDevice.ACTION_FOUND->{
-                        //Log.v("bluetooth_get","find it")
+                        Log.v("bluetooth_get","find it")
                         p1.getParcelableExtra<BluetoothDevice>(BluetoothDevice.EXTRA_DEVICE)?.let {
                             device->
                             blue_devices.add(device)
@@ -118,9 +123,23 @@ class BluetoothService(activity: Activity,handler: Handler,user: User_con) {
             mActivity.registerReceiver(mReceiver,it)
         }
     }
-    fun connect_rasp(){
-        btspp= BluetoothSPP(mActivity)
-        btspp?.apply {
+    fun check_descovery(){
+        if(btspp==null){
+            initialize_blue()
+        }
+        btspp?.isBluetoothEnabled?.let{
+            if(it){
+                mActivity.startActivityForResult(Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE),Request_cons.REQUEST_ENABLE_BT_DISCOVERY)
+            }else{
+                start_discovery()
+            }
+        }
+    }
+    fun start_discovery(){
+        bluetooth_adp.startDiscovery()
+    }
+    fun initialize_blue(){
+        btspp= BluetoothSPP(mActivity).apply {
             setBluetoothConnectionListener(object :BluetoothSPP.BluetoothConnectionListener{
                 override fun onDeviceDisconnected() {
 
@@ -135,64 +154,79 @@ class BluetoothService(activity: Activity,handler: Handler,user: User_con) {
                 }
 
             })
-            setupService()
-            startService(BluetoothState.DEVICE_ANDROID);
-            connect(Bluetooth_cons.rasp_device)
+            setOnDataReceivedListener { data, message ->
+
+            }
+            setAutoConnectionListener(object: BluetoothSPP.AutoConnectionListener{
+                override fun onAutoConnectionStarted() {
+
+                }
+
+                override fun onNewConnection(name: String?, address: String?) {
+                    Toast.makeText(mActivity,address,Toast.LENGTH_SHORT).show()
+                }
+
+            })
+
         }
+    }
+    fun connect_rasp(){
+        if(bluetooth_adp.isDiscovering){
+            bluetooth_adp.cancelDiscovery()
+        }
+        initialize_blue()
+        btspp?.connect(Bluetooth_cons.rasp_device)
         cancle_check=false
         //before_connect(btAdapter.getRemoteDevice(Bluetooth_cons.rasp_device))
     }
 
     fun check_device(){
-        if(!btAdapter.isEnabled){
-            mActivity.startActivityForResult(Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE),Request_cons.REQUEST_ENABLE_BT)
-        }else{
-            connect_rasp()
+        btspp?.isBluetoothEnabled?.let{
+            if(it){
+                mActivity.startActivityForResult(Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE),Request_cons.REQUEST_ENABLE_BT)
+            }else{
+                //connect_rasp()
+            }
         }
     }
     fun before_connect(remote_device: BluetoothDevice) {
       remote_device?.let{
           device->
-          device.let{
-              if(btAdapter.isDiscovering){
-                  btAdapter.cancelDiscovery()
+          btspp?.let{
+              it.setupService()
+              it.startService(BluetoothState.DEVICE_ANDROID);
+              bluetooth_adp.isDiscovering.let {
+                  if(it){
+                      bluetooth_adp?.cancelDiscovery()
+                  }
               }
-              btspp= BluetoothSPP(mActivity)
-              btspp?.apply {
-                  setBluetoothConnectionListener(object :BluetoothSPP.BluetoothConnectionListener{
-                      override fun onDeviceDisconnected() {
-
-                      }
-
-                      override fun onDeviceConnected(name: String?, address: String?) {
-
-                      }
-
-                      override fun onDeviceConnectionFailed() {
-
-                      }
-
-                  })
-                  setupService()
-                  startService(BluetoothState.DEVICE_ANDROID);
-                  connect(remote_device.address)
-              }
-              cancle_check=false
+              Log.v("bluetooth_get",remote_device.address)
+              it.connect(remote_device.address)
           }
+          cancle_check=false
         }
     }
     fun close(){
         Log.v("bluetooth_get","get")
-
-        if(btAdapter.isDiscovering){
-            btAdapter.cancelDiscovery()
+        bluetooth_adp.isDiscovering.let {
+            if(it){
+                   bluetooth_adp?.cancelDiscovery()
+            }
         }
         //cnthread?.close()
-        btspp?.disconnect()
-        btspp?.stopService()
-        cancle_check=true;
+        if(!cancle_check){
+            btspp?.disconnect()
+            btspp?.stopService()
+            cancle_check=true;
+        }
         //btdevice_list.stopScan(bt_cb)
-        mActivity.unregisterReceiver(mReceiver)
+        /*
+
+         */
+        if(registered){
+            mActivity.unregisterReceiver(mReceiver)
+            registered=false
+        }
         //Toast.makeText(mActivity,"unregist complete",Toast.LENGTH_SHORT).show()
     }
     fun send_shop(){
@@ -204,6 +238,7 @@ class BluetoothService(activity: Activity,handler: Handler,user: User_con) {
                     content.put("shop",it)
                 }
             }
+            //Toast.makeText(mActivity,"sended",Toast.LENGTH_SHORT).show()
             (content.toString()+Bluetooth_cons.delimitor.toString()).let{
                 btspp?.send(it,true)
             }

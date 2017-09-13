@@ -39,7 +39,7 @@ class game_frag : base_frag() {
                     blue_service.btspp?.let{
 
                     } ?: kotlin.run{
-                        blue_service.check_device()
+                        //blue_service.check_device()
                     }
                 }
             }
@@ -49,7 +49,7 @@ class game_frag : base_frag() {
             if(activity is Base_Activity){
                 (activity as Base_Activity).apply {
                     handler.sendEmptyMessage(hanlder_message.BLUE_FINISHED)
-                    blue_service.check_device()
+                    blue_service.check_descovery()
                 }
             }
         }

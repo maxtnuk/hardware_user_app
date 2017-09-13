@@ -27,7 +27,7 @@ class game_view_adp(context: Context?, itemId: Int,user: User_con) : FitGridAdap
                     val item_view=view.findViewById(R.id.item_bk);
                     item_view.setOnClickListener {
                         view: View? ->
-                        (context as Base_Activity).blue_service.check_device()
+                        //(context as Base_Activity).blue_service.check_device()
                     }
                     val shape: GradientDrawable =item_view.background as GradientDrawable
                     val color = Color.argb(255, rnd.nextInt(256), rnd.nextInt(256), rnd.nextInt(256))
